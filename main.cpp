@@ -19,6 +19,8 @@ struct salon {
     string haircut;
 };
 
+vector<salon> fromprevsteps[4];
+
 vector<string> read_file(string filename) {
     ifstream file (filename);
 
@@ -76,7 +78,7 @@ vector<salon> init_saloons_from_file(vector<string> filelines) {
     return saloons;
 }
 
-vector<salon> sort_by_price(vector<salon> saloons) {
+vector<salon> sort_by_price() {
     const int val = 350;
     
     int input;
@@ -86,10 +88,10 @@ vector<salon> sort_by_price(vector<salon> saloons) {
     cin >> input;
 
     if (input == 0) {
-        return sort_by_price(saloons);
+        return sort_by_price();
     }
 
-    for (salon s : saloons) {
+    for (salon s : fromprevsteps[0]) {
         if (input == 1 && s.price < val) {
             sorted.push_back(s);
         }
@@ -101,22 +103,22 @@ vector<salon> sort_by_price(vector<salon> saloons) {
     return sorted;
 }
 
-vector<salon> sort_by_wait_time(vector<salon> saloons) {
+vector<salon> sort_by_wait_time() {
     const int time = 6;
     
     int input;
     vector<salon> sorted;
 
-    cout << "Какое время ожидания вас устраивает? Если меньше " << time << " нажмите 1, если больше " << time << " нажмите 2. Для возврата нажмите 0: ";
+    cout << "Какое время ожидания вас устраивает? Если меньше " << time << " нажмите 1, если больше " << time << " нажмите 2 " << zero_to_return;
     cin >> input;
 
     if (input == 0) {
-        saloons = sort_by_price(saloons);
+        fromprevsteps[1] = sort_by_price();
 
-        return sort_by_wait_time(saloons);
+        return sort_by_wait_time();
     }
 
-    for (salon s : saloons) {
+    for (salon s : fromprevsteps[1]) {
         if (input == 1 && s.wait_time < time) {
             sorted.push_back(s);
         }
@@ -128,7 +130,7 @@ vector<salon> sort_by_wait_time(vector<salon> saloons) {
     return sorted;
 }
 
-vector<salon> sort_by_haircut(vector<salon> saloons) {
+vector<salon> sort_by_haircut() {
     std::string a = "мужская", b = "женская";
     
     int input;
@@ -138,12 +140,12 @@ vector<salon> sort_by_haircut(vector<salon> saloons) {
     cin >> input;
 
     if (input == 0) {
-        saloons = sort_by_wait_time(saloons);
+        fromprevsteps[2] = sort_by_wait_time();
 
-        return sort_by_haircut(saloons);
+        return sort_by_haircut();
     }
 
-    for (salon s : saloons) {
+    for (salon s : fromprevsteps[2]) {
         if (input == 1 && s.haircut == a) {
             sorted.push_back(s);
         }
@@ -155,22 +157,22 @@ vector<salon> sort_by_haircut(vector<salon> saloons) {
     return sorted;
 }
 
-vector<salon> sort_by_workers(vector<salon> saloons) {
+vector<salon> sort_by_workers() {
     const int worker = 4;
     
     int input;
     vector<salon> sorted;
 
-    cout << "Какое количесво работников в парикмахерской устраивает? Если меньше " << worker << " нажмите 1, если больше " << worker << " нажмите 2. Для возврата нажмите 0: ";
+    cout << "Какое количесво работников в парикмахерской вас устраивает? Если меньше " << worker << " нажмите 1, если больше " << worker << " нажмите 2 " << zero_to_return;
     cin >> input;
 
     if (input == 0) {
-        saloons = sort_by_haircut(saloons);
+        fromprevsteps[3] = sort_by_haircut();
 
-        return sort_by_workers(saloons);
+        return sort_by_workers();
     }
 
-    for (salon s : saloons) {
+    for (salon s : fromprevsteps[3]) {
         if (input == 1 && s.workers < worker) {
             sorted.push_back(s);
         }
@@ -186,31 +188,32 @@ int main(int arglen, char* argv[])
 {
     setlocale(LC_CTYPE, "rus");
     if (arglen != 2) {
+        cout << "Укажите пожалуйста имя файла";
         return 2;
     }
 
     string filename = argv[1];
     vector<string> filelines = read_file(filename);
 
-    vector<salon> saloons = init_saloons_from_file(filelines);
-    vector<salon> saloons_by_price = sort_by_price(saloons);
-    vector<salon> saloons_by_wait_time = sort_by_wait_time(saloons_by_price);
-    vector<salon> saloons_by_reviews = sort_by_haircut(saloons_by_wait_time);
-    vector<salon> saloons_by_workers = sort_by_workers(saloons_by_reviews);
+    fromprevsteps[0] = init_saloons_from_file(filelines);
+    fromprevsteps[1] = sort_by_price();
+    fromprevsteps[2] = sort_by_wait_time();
+    fromprevsteps[3] = sort_by_haircut();
+    vector<salon> saloons = sort_by_workers();
 
-    if (saloons_by_workers.size() == 0) {
+    if (saloons.size() == 0) {
         cout << "Ничего не найдено." << endl;
 
         return 0;
     } 
 
-    for (salon s : saloons_by_workers) {
-        cout << s.name 
-             << ": \n\tЦена: " << s.price 
-             << "₽\n\tВремя ожидания: " << s.wait_time 
-             << " минут\n\tТип стрижки: " << s.haircut 
-             << "\n\tКоличество работников: " << s.workers 
-             << "\n\tРейтинг организации: " << s.rating << "%" << endl;
+    for (salon s : saloons) {
+        cout << "Вам подходит парикмахерская \"" << s.name << "\":" << endl 
+             << "\tЦена: " << s.price << "₽" << endl
+             << "\tВремя ожидания: " << s.wait_time << " минуты" << endl
+             << "\tТип стрижки: " << s.haircut << endl
+             << "\tКоличество работников: " << s.workers << endl
+             << "\tРейтинг парикмахерской: " << s.rating << "%" << endl;
     }
 
     return 0;
